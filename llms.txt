@@ -1,6 +1,6 @@
 # TestFlows Machine Status
 
-> The current status of TestFlows Machine: the website, the API, sign-in, and sessions on each class. Every component is checked from a separate server, every 30 seconds for the website and the API, every minute for sign-in, and every 15 minutes for sessions. Incidents and maintenance are written by an operator.
+> The current status of TestFlows Machine: the website, the API, sign-in, and sessions on each class. The website, the API and sessions are checked from a server outside the TestFlows cloud, sign-in from inside it: every 30 seconds for the website and the API, every minute for sign-in, and every 15 minutes for sessions. Incidents and maintenance are written by an operator.
 
 ## Status
 

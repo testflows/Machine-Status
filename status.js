@@ -41,7 +41,6 @@ const SAID = {
   down: "down",
   degraded: "degraded",
   maintenance: "under maintenance",
-  unknown: "not checked now",
 };
 // The words of an incident's updates, as the operator writes them.
 const UPDATE = {
@@ -60,13 +59,15 @@ const ABOUT = {
   website: "testflows.com, with the docs and the installer. Checked every 30 seconds.",
   api: "The API behind every machine command and the SDK. Checked every 30 seconds.",
   "sign-in": "Sign-in codes sent by email and accepted. Checked every minute.",
-  sessions: "On each class: create a session, start a run, checkpoint it. Checked every 15 minutes.",
+  sessions: "Creates a session on each class, starts a run in it and checkpoints the run. Checked every 15 minutes. Run",
 };
 // A command a description names, set as code after it.
-const ABOUT_COMMAND = { sessions: ["machine sessions show", " names your session's class."] };
+const ABOUT_COMMAND = { sessions: ["machine sessions show", " to see your session's class."] };
 
+// A query each time: GitHub Pages serves its files for 10 minutes from
+// caches the browser's no-store does not reach.
 async function load(file) {
-  const resp = await fetch(file, { cache: "no-store" });
+  const resp = await fetch(`${file}?t=${Date.now()}`, { cache: "no-store" });
   if (!resp.ok) throw new Error(`${file}: ${resp.status}`);
   return resp.json();
 }
@@ -80,8 +81,7 @@ function el(tag, cls, text) {
 
 // --- Time and the viewer's time zone ----------------------------------------
 
-// UTC, their own, or any other zone, kept in their browser alone. Storage
-// that throws, as in a private window, means UTC.
+// Their own by default, UTC or any other, kept in their browser alone.
 const ZONE_KEY = "zone";
 const THEME_KEY = "theme";
 const LOCAL = "local";
@@ -104,7 +104,7 @@ function store(key, value) {
   }
 }
 
-let choice = stored(ZONE_KEY) || "UTC";
+let choice = stored(ZONE_KEY) || LOCAL;
 let zone = resolveZone(choice);
 
 function resolveZone(value) {
@@ -270,13 +270,14 @@ function dayLevel(stretches, start, end) {
   return { level, seconds: down };
 }
 
-// The share of checked time, up to HISTORY_DAYS, a component was not down.
-// Time not checked counts neither way.
+// The share of checked time, up to HISTORY_DAYS, a component was
+// operational: degraded and down both count against it. Time not checked
+// counts neither way.
 function uptime(stretches, since, until) {
   const start = Math.max(since, until - HISTORY_DAYS * DAY);
   const checked = until - start - covered(stretches, ["unknown"], start, until);
   if (checked < HOUR) return null;
-  return 100 * (1 - covered(stretches, ["down"], start, until) / checked);
+  return 100 * (1 - covered(stretches, ["degraded", "down"], start, until) / checked);
 }
 
 function percent(share) {
@@ -334,11 +335,15 @@ function lastChange(status) {
 
 // The banner: the worst level now, naming the components at it.
 function verdict(components) {
-  for (const at of ["down", "degraded", "maintenance", "unknown"]) {
+  for (const at of ["down", "degraded", "maintenance"]) {
     const named = components.filter((c) => c.level === at).map((c) => unbroken(c.name));
     if (named.length === 1) return [at, `${named[0]} is ${SAID[at]}`];
     if (named.length === 2) return [at, `${named[0]} and ${named[1]} are ${SAID[at]}`];
     if (named.length > 2) return [at, `${named.length} components are ${SAID[at]}`];
+  }
+  const unknown = components.filter((c) => c.level === "unknown").map((c) => unbroken(c.name));
+  if (unknown.length) {
+    return ["unknown", `Status unknown for ${unknown.length > 2 ? `${unknown.length} components` : unknown.join(" and ")}`];
   }
   return ["operational", "Every component is operational"];
 }
@@ -367,11 +372,26 @@ function scheduled(incident) {
   return `Scheduled ${when(incident.from)}${incident.to ? ` to ${when(incident.to)}` : ""}`;
 }
 
-function renderOpen(incidents, names, now) {
+// An outage the checks found that no written incident covers yet.
+function ongoing(stretches, incidents) {
+  return stretches.filter((s) => s.to === null && (s.level === "down" || s.level === "degraded") && !coveredByWritten(s, incidents));
+}
+
+function renderOpen(incidents, stretches, names, now) {
   const box = document.getElementById("open");
   const shown = incidents.filter((i) => open(i, now));
-  box.hidden = shown.length === 0;
+  const found = ongoing(stretches, incidents);
+  box.hidden = shown.length + found.length === 0;
   box.replaceChildren(
+    ...found.map((s) => {
+      const card = el("article", `incident ${s.level}`);
+      const name = unbroken(names[s.component] || s.component);
+      card.append(
+        el("h3", "", `${name} ${LABEL[s.level].toLowerCase()} since ${clock(s.from)} ${zoneName()}`),
+        el("p", "muted", "Detected automatically. No update from the team yet."),
+      );
+      return card;
+    }),
     ...shown.map((i) => {
       const card = el("article", `incident ${i.level}`);
       card.id = i.id;
@@ -392,7 +412,7 @@ function renderPast(incidents, stretches, names, now) {
       .filter((i) => !open(i, now) && i.updates[0].at >= start)
       .map((i) => ({ at: i.updates[0].at, node: pastWritten(i, names) })),
     ...stretches
-      .filter((s) => (s.level === "down" || s.level === "degraded") && (s.to ?? now) >= start && !coveredByWritten(s, incidents))
+      .filter((s) => (s.level === "down" || s.level === "degraded") && s.to !== null && s.to >= start && !coveredByWritten(s, incidents))
       .map((s) => ({ at: s.from, node: pastMeasured(s, names) })),
   ].sort((a, b) => b.at - a.at);
   if (!items.length) {
@@ -442,9 +462,7 @@ function pastWritten(incident, names) {
 
 function pastMeasured(stretch, names) {
   const name = unbroken(names[stretch.component] || stretch.component);
-  const meta = stretch.to === null
-    ? `Since ${clock(stretch.from)}`
-    : `${duration(stretch.to - stretch.from)}, ${clock(stretch.from)} to ${clock(stretch.to)}`;
+  const meta = `${duration(stretch.to - stretch.from)}, ${clock(stretch.from)} to ${clock(stretch.to)} · detected automatically`;
   return pastRow("", stretch.level, `${name} ${LABEL[stretch.level].toLowerCase()}`, meta, null);
 }
 
@@ -487,7 +505,7 @@ function componentRow(row, status, until, now, days) {
     el("span", "", `${days} days ago`),
     el("span", "", up === null
       ? `Checked since ${when(status.since)}`
-      : `${percent(up)} uptime${young ? ` since ${day(status.since)}` : ""}`),
+      : `${percent(up)} operational${young ? ` since ${day(status.since)}` : ""}`),
     el("span", "", "Today"),
   );
   item.append(head, aboutLine(row), bars(mine, status.since, until, now, days), foot);
@@ -518,12 +536,12 @@ function renderStatus(status, incidents, now) {
   document.getElementById("verdict").textContent = text;
   document.getElementById("updated").textContent = stale
     ? `No update since ${when(status.updated)}. The checks may have stopped.`
-    : `${changed === null ? `No change since ${when(status.since)}` : `Last change ${ago(now - changed)}`}. Confirmed ${ago(now - status.updated)}.`;
+    : `${changed === null ? `No problems since checks began on ${day(status.since)}` : `Last change ${ago(now - changed)}`}. Updated ${ago(now - status.updated)}.`;
   document.getElementById("range").textContent = `The last ${days} days`;
   document.getElementById("components").replaceChildren(
     ...groups(components).map((row) => componentRow(row, status, until, now, days)),
   );
-  renderOpen(incidents, names, now);
+  renderOpen(incidents, status.incidents, names, now);
   renderPast(incidents, status.incidents, names, now);
 }
 
@@ -531,7 +549,7 @@ function renderUnavailable(incidents, now) {
   document.getElementById("overall").className = "overall unknown";
   document.getElementById("verdict").textContent = "Status unknown";
   document.getElementById("updated").textContent = "The status could not be loaded. The page tries again every minute.";
-  renderOpen(incidents, {}, now);
+  renderOpen(incidents, [], {}, now);
 }
 
 // --- The controls -----------------------------------------------------------
