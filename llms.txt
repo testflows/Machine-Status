@@ -1,0 +1,18 @@
+# TestFlows Machine Status
+
+> Whether TestFlows Machine works now: the website, the API, sign-in, and sessions on each class. Every component is measured from a server outside the cloud, every 30 seconds for the website and the API and every 15 minutes for sessions. Incidents and maintenance are written by an operator.
+
+## Status
+
+- [Status in Markdown](https://status.testflows.com/index.md): The levels now, open incidents with their updates, and the last 14 days. Rewritten on every change and every 10 minutes; older than 35 minutes, the status is unknown.
+
+## Machine-readable
+
+- [status.json](https://status.testflows.com/status.json): Each component's level, and each stretch it was not operational for 90 days, in Unix seconds. `updated` is when it was written; `stale_after` is how old it may be before it is not trusted.
+- [incidents.json](https://status.testflows.com/incidents.json): The incidents and maintenance an operator writes, each with its components and timestamped updates.
+- [feed.atom](https://status.testflows.com/feed.atom): The incidents as an Atom feed.
+
+## Optional
+
+- [TestFlows Machine](https://testflows.com/machine.md): What Machine is.
+- [The website's index for agents](https://testflows.com/llms.txt): The rest of testflows.com in Markdown.
