@@ -1,8 +1,8 @@
 # TestFlows Machine Status
 
-> The current status of TestFlows Machine. The website, the API and sessions are checked from a server outside the TestFlows cloud, sign-in from inside it. This file is rewritten on every change, and every 60 minutes besides. If it is older than 75 minutes, treat the status as unknown.
+> The current status of TestFlows Machine. The website, the API and sessions are checked from a server outside the TestFlows cloud, sign-in from inside it. This file is rewritten on every change and at least every 60 minutes. If it is older than 75 minutes, treat the status as unknown.
 
-Updated 2026-11-15 23:11 UTC.
+Updated 2026-11-15 23:18 UTC.
 
 ## Now
 
@@ -13,8 +13,8 @@ Every component is operational.
 | Website | Operational |
 | API | Operational |
 | Sign-in | Operational |
-| Sessions on standard-ie, EU | Operational |
-| Sessions on standard-ip, EU | Operational |
+| Sessions on standard-ie in EU | Operational |
+| Sessions on standard-ip in EU | Operational |
 
 ## Open incidents
 

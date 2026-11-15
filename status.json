@@ -1,5 +1,5 @@
 {
- "updated": 1794784301,
+ "updated": 1794784680,
  "since": 1794754776,
  "stale_after": 4500,
  "components": [
@@ -20,12 +20,12 @@
   },
   {
    "id": "sessions/standard-ie",
-   "name": "Sessions on standard-ie, EU",
+   "name": "Sessions on standard-ie in EU",
    "level": "operational"
   },
   {
    "id": "sessions/standard-ip",
-   "name": "Sessions on standard-ip, EU",
+   "name": "Sessions on standard-ip in EU",
    "level": "operational"
   }
  ],
