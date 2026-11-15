@@ -1,0 +1,18 @@
+{
+ "updated": 1794754776,
+ "since": 1794754776,
+ "stale_after": 4500,
+ "components": [
+  {
+   "id": "api",
+   "name": "API",
+   "level": "operational"
+  },
+  {
+   "id": "sign-in",
+   "name": "Sign-in",
+   "level": "operational"
+  }
+ ],
+ "incidents": []
+}
