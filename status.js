@@ -58,11 +58,11 @@ const SESSIONS = "sessions/";
 const ABOUT = {
   website: "testflows.com, with the docs and the installer. Checked every 30 seconds.",
   api: "The API behind every machine command and the SDK. Checked every 30 seconds.",
-  "sign-in": "Sign-in codes sent by email and accepted. Checked every minute.",
-  sessions: "Creates a session on each class, starts a run in it and checkpoints the run, every 15 minutes. An outage shows within 30 minutes.",
+  "sign-in": "Sends a sign-in code by email and signs in with it. Checked every minute.",
+  sessions: "Every 15 minutes, creates a session on each class, starts a run and checkpoints it. An outage shows within 30 minutes.",
 };
 // A command a description names, on its own line after it.
-const ABOUT_COMMAND = { sessions: ["Your session's class: ", "machine sessions show"] };
+const ABOUT_COMMAND = { sessions: ["Find your session's class with ", "machine sessions show"] };
 
 // A query each time: GitHub Pages serves its files for 10 minutes from
 // caches the browser's no-store does not reach.
@@ -168,11 +168,11 @@ function ago(seconds) {
   return `${Math.round(hours / 24)} days ago`;
 }
 
+// 45 minutes, 6 hours, 1 hour 5 minutes: as the Markdown and the feed say it.
 function duration(seconds) {
   const minutes = Math.max(1, Math.round(seconds / MINUTE));
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
+  const plural = (n, unit) => (n ? `${n} ${unit}${n === 1 ? "" : "s"}` : "");
+  return [plural(Math.floor(minutes / 60), "hour"), plural(minutes % 60, "minute")].filter(Boolean).join(" ");
 }
 
 // A time an operator wrote: one without a zone is UTC, as the outpost reads it.
@@ -337,7 +337,8 @@ function lastChange(status) {
 function verdict(components) {
   for (const at of ["down", "degraded", "maintenance"]) {
     const named = components.filter((c) => c.level === at).map((c) => unbroken(c.name));
-    if (named.length === 1) return [at, `${named[0]} is ${SAID[at]}`];
+    // "Sessions on standard-ip in EU" is plural.
+    if (named.length === 1) return [at, `${named[0]} ${named[0].startsWith("Sessions") ? "are" : "is"} ${SAID[at]}`];
     if (named.length === 2) return [at, `${named[0]} and ${named[1]} are ${SAID[at]}`];
     if (named.length > 2) return [at, `${named.length} components are ${SAID[at]}`];
   }
@@ -533,11 +534,14 @@ function renderStatus(status, incidents, now) {
   // An outage the checks found and no one has written up yet: the banner
   // says since when, once, rather than a card repeating it.
   const found = ongoing(status.incidents, incidents).sort((a, b) => a.from - b.from)[0];
-  document.getElementById("updated").textContent = stale
+  // A class named in the banner: how to tell whether it is the reader's.
+  const classNamed = components.some((c) => c.id.startsWith(SESSIONS) && c.level !== "operational" && c.level !== "unknown");
+  const yours = classNamed ? " Find your session's class with machine sessions show." : "";
+  document.getElementById("updated").textContent = (stale
     ? `No update since ${when(status.updated)}. Status unknown.`
     : found && overall !== "operational"
       ? `${LABEL[found.level]} since ${when(found.from)}. Detected automatically. No update from the team yet.`
-      : `${changed === null ? `No problems since checks began ${day(status.since)}` : `Last change ${ago(now - changed)}`}. Updated ${ago(now - status.updated)}.`;
+      : `${changed === null ? `No problems since checks began ${day(status.since)}` : `Last change ${ago(now - changed)}`}. Updated ${ago(now - status.updated)}.`) + (stale ? "" : yours);
   document.getElementById("range").textContent = `The last ${days} days`;
   document.getElementById("components").replaceChildren(
     ...groups(components).map((row) => componentRow(row, status, until, now, days)),
