@@ -4,7 +4,7 @@
 
 ## Status
 
-- [Status in Markdown](https://status.testflows.com/index.md): The levels now, open incidents with their updates, and the last 14 days. Rewritten on every change and every 10 minutes; older than 35 minutes, the status is unknown.
+- [Status in Markdown](https://status.testflows.com/index.md): The levels now, open incidents with their updates, and the last 14 days. Rewritten at once on every change, and every 6 hours besides; older than 7 hours, the status is unknown.
 
 ## Machine-readable
 

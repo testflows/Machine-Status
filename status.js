@@ -122,7 +122,8 @@ function ago(seconds) {
   if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
   const hours = Math.round(minutes / 60);
-  return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  if (hours < 48) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  return `${Math.round(hours / 24)} days ago`;
 }
 
 function duration(seconds) {
@@ -404,21 +405,20 @@ function groups(components) {
   return rows;
 }
 
-function componentRow(row, status, now, days) {
+function componentRow(row, status, until, now, days) {
   const mine = status.incidents.filter((s) => row.ids.includes(s.component));
   const item = el("li", row.level);
   const head = el("div", "row");
   head.append(el("span", "name", row.name), el("span", "level", LABEL[row.level]));
-  // What is known ends at the last update, however old it is. A group's
-  // share not down counts a stretch any of its parts was down.
-  const up = uptime(mine, status.since, status.updated);
+  // A group's share not down counts a stretch any of its parts was down.
+  const up = uptime(mine, status.since, until);
   const foot = el("div", "uptime muted");
   foot.append(
     el("span", "", `${days} days ago`),
     el("span", "", up === null ? `Measured since ${utc(status.since)}` : `${up}% not down`),
     el("span", "", "Today"),
   );
-  item.append(head, el("p", "about-line muted", row.about), bars(mine, status.since, status.updated, now, days), foot);
+  item.append(head, el("p", "about-line muted", row.about), bars(mine, status.since, until, now, days), foot);
   if (row.parts.length) {
     const parts = el("ul", "parts");
     for (const p of row.parts) {
@@ -431,6 +431,12 @@ function componentRow(row, status, now, days) {
   return item;
 }
 
+// When a level last changed: the newest edge of a stretch, or the start of
+// the record when nothing has changed since.
+function lastChange(status) {
+  return status.incidents.reduce((t, s) => Math.max(t, s.from, s.to ?? 0), status.since);
+}
+
 function renderStatus(status, incidents, now) {
   const stale = now - status.updated > status.stale_after;
   const days = NARROW.matches ? NARROW_DAYS : HISTORY_DAYS;
@@ -440,12 +446,16 @@ function renderStatus(status, incidents, now) {
   const [overall, text] = stale ? ["unknown", "Status unknown"] : verdict(components.map((c) => c.level));
   document.getElementById("overall").className = `overall ${overall}`;
   document.getElementById("verdict").textContent = text;
+  // The outpost writes every change at once, so a fresh file holds until
+  // now; a stale one only until it was written.
+  const until = stale ? status.updated : now;
+  const changed = lastChange(status);
   document.getElementById("updated").textContent = stale
     ? `No update since ${utc(status.updated)}`
-    : `Updated ${ago(now - status.updated)}, at ${utc(status.updated)}`;
+    : `Measured continuously. Last change ${ago(now - changed)}, at ${utc(changed)}`;
   document.getElementById("range").textContent = `The last ${days} days`;
   document.getElementById("components").replaceChildren(
-    ...groups(components).map((row) => componentRow(row, status, now, days)),
+    ...groups(components).map((row) => componentRow(row, status, until, now, days)),
   );
   renderOpen(incidents, names, now);
   renderPast(incidents, status.incidents, names, now);

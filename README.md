@@ -10,7 +10,7 @@ licensed for reuse.
 
 | File | Written by |
 |---|---|
-| `status.json` | The outpost, outside the cloud: on every change, and every 10 minutes |
+| `status.json` | The outpost, outside the cloud: at once on every change, and every 6 hours besides |
 | `index.md` | The outpost: the status in Markdown, for agents |
 | `feed.atom` | The outpost: the incidents as an Atom feed |
 | `incidents.json` | An operator, by hand |
@@ -25,7 +25,7 @@ An incident, or a planned maintenance, is an entry of `incidents.json`.
 Add it, push, and add an update as it changes. The page shows an open
 incident at the top and raises its components to its level; a resolved
 one moves to the past incidents. The outpost puts it in `feed.atom` and
-`index.md` at its next write.
+`index.md` within 5 minutes.
 
 ```json
 [
