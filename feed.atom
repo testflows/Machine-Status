@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>TestFlows Machine Status</title>
+  <id>https://status.testflows.com/</id>
+  <link href="https://status.testflows.com/" />
+  <link rel="self" href="https://status.testflows.com/feed.atom" />
+  <updated>2026-11-15T14:59:36Z</updated>
+</feed>
