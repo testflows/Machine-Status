@@ -15,12 +15,16 @@
 // operator. Every text from them goes in as text, never as HTML.
 "use strict";
 
+const MINUTE = 60;
+const HOUR = 3600;
 const DAY = 86400;
 const HISTORY_DAYS = 90;
 const NARROW_DAYS = 30;
 const PAST_DAYS = 14;
 // A maintenance shows this long before it starts.
 const MAINTENANCE_AHEAD = 7 * DAY;
+// A day whose time was mostly not checked has no data, not a colour.
+const UNCHECKED_SHARE = 0.5;
 const NARROW = window.matchMedia("(max-width: 560px)");
 const REFRESH_MS = 60 * 1000;
 // Worst last: a component, a day or the page shows the worst level it has.
@@ -31,6 +35,13 @@ const LABEL = {
   degraded: "Degraded",
   down: "Down",
   unknown: "Unknown",
+};
+// How the banner says each level of the components at it.
+const SAID = {
+  down: "down",
+  degraded: "degraded",
+  maintenance: "under maintenance",
+  unknown: "not checked now",
 };
 // The words of an incident's updates, as the operator writes them.
 const UPDATE = {
@@ -46,10 +57,13 @@ const UPDATE = {
 const FINISHED = new Set(["resolved", "completed"]);
 const SESSIONS = "sessions/";
 const ABOUT = {
-  website: "testflows.com, with the documentation and the installer, fetched from outside the cloud every 30 seconds.",
-  api: "The API every command and the SDK use, asked from outside the cloud every 30 seconds.",
-  "sign-in": "Sign-in codes mailed and accepted, checked every minute.",
+  website: "testflows.com, with the docs and the installer. Checked every 30 seconds.",
+  api: "The API behind every machine command and the SDK. Checked every 30 seconds.",
+  "sign-in": "Sign-in codes sent by email and accepted. Checked every minute.",
+  sessions: "On each class: create a session, start a run, checkpoint it. Checked every 15 minutes.",
 };
+// A command a description names, set as code after it.
+const ABOUT_COMMAND = { sessions: ["machine sessions show", " names your session's class."] };
 
 async function load(file) {
   const resp = await fetch(file, { cache: "no-store" });
@@ -64,9 +78,12 @@ function el(tag, cls, text) {
   return node;
 }
 
-// The viewer's time zone: UTC, their own, or any other, kept in their
-// browser alone. Storage that throws, as in a private window, means UTC.
+// --- Time and the viewer's time zone ----------------------------------------
+
+// UTC, their own, or any other zone, kept in their browser alone. Storage
+// that throws, as in a private window, means UTC.
 const ZONE_KEY = "zone";
+const THEME_KEY = "theme";
 const LOCAL = "local";
 const LOCAL_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const ZONES = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [];
@@ -95,6 +112,15 @@ function resolveZone(value) {
   return value === "UTC" || ZONES.includes(value) ? value : "UTC";
 }
 
+// A zone's offset from UTC at a moment, in minutes, and as GMT+5:30 writes it.
+function offset(name, at) {
+  const part = new Intl.DateTimeFormat("en-US", { timeZone: name, timeZoneName: "longOffset" })
+    .formatToParts(new Date(at * 1000)).find((p) => p.type === "timeZoneName").value;
+  const found = part.match(/GMT([+-])(\d{2}):(\d{2})/);
+  const minutes = found ? (found[1] === "-" ? -1 : 1) * (Number(found[2]) * 60 + Number(found[3])) : 0;
+  return { minutes, label: found ? part : "GMT" };
+}
+
 function zoneName() {
   if (zone === "UTC") return "UTC";
   return new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "short" })
@@ -113,12 +139,28 @@ function day(seconds) {
   });
 }
 
-function utc(seconds) {
+function when(seconds) {
   return `${day(seconds)}, ${clock(seconds)} ${zoneName()}`;
 }
 
+// The start of the day that holds `seconds`, in the viewer's zone: the bars
+// and the past list cut days where the dates they show change.
+function dayStart(seconds) {
+  const [y, m, d] = new Intl.DateTimeFormat("en-CA", {
+    timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date(seconds * 1000)).split("-").map(Number);
+  return Date.UTC(y, m - 1, d) / 1000 - offset(zone, seconds).minutes * MINUTE;
+}
+
+// The starts of the last `count` days, the oldest first, today last.
+function dayStarts(now, count) {
+  const starts = [dayStart(now)];
+  while (starts.length < count) starts.unshift(dayStart(starts[0] - 1));
+  return starts;
+}
+
 function ago(seconds) {
-  const minutes = Math.round(seconds / 60);
+  const minutes = Math.round(seconds / MINUTE);
   if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
   const hours = Math.round(minutes / 60);
@@ -127,10 +169,18 @@ function ago(seconds) {
 }
 
 function duration(seconds) {
-  const minutes = Math.max(1, Math.round(seconds / 60));
+  const minutes = Math.max(1, Math.round(seconds / MINUTE));
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
   return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
+}
+
+// A time an operator wrote: one without a zone is UTC, as the outpost reads it.
+function seconds(text) {
+  if (typeof text !== "string") return null;
+  const zoned = /([zZ]|[+-]\d{2}:?\d{2})$/.test(text) || !text.includes("T") ? text : `${text}Z`;
+  const t = Date.parse(zoned);
+  return Number.isNaN(t) ? null : t / 1000;
 }
 
 function worst(levels) {
@@ -142,19 +192,7 @@ function unbroken(text) {
   return text.replaceAll("-", "‑");
 }
 
-function about(id) {
-  if (id.startsWith(SESSIONS)) {
-    return `A session created on ${id.slice(SESSIONS.length)}, a machine run in it and checkpointed, every 15 minutes.`;
-  }
-  return ABOUT[id] || "";
-}
-
 // --- The incidents an operator writes ---------------------------------------
-
-function seconds(iso) {
-  const t = Date.parse(iso);
-  return Number.isNaN(t) ? null : t / 1000;
-}
 
 // Each written incident, its updates oldest first; a typo in one entry
 // leaves it out, never the page.
@@ -200,59 +238,75 @@ function underway(incident, now) {
 
 // --- The measured history ---------------------------------------------------
 
-// The worst level of a component in [start, end), and how long it was not
-// operational there.
-function span(stretches, start, end) {
-  let level = "operational";
+// The seconds of [start, end) the stretches of the given levels cover, each
+// moment once: two classes down at once are one stretch down for Sessions.
+function covered(stretches, levels, start, end) {
+  const spans = stretches
+    .filter((s) => levels.includes(s.level))
+    .map((s) => [Math.max(s.from, start), Math.min(s.to ?? end, end)])
+    .filter(([a, b]) => b > a)
+    .sort((x, y) => x[0] - y[0]);
   let total = 0;
-  for (const s of stretches) {
-    const from = Math.max(s.from, start);
-    const to = Math.min(s.to ?? end, end);
-    if (to <= from || s.level === "unknown") continue;
-    total += to - from;
-    level = worst([level, s.level]);
+  let reach = start;
+  for (const [a, b] of spans) {
+    if (b <= reach) continue;
+    total += b - Math.max(a, reach);
+    reach = b;
   }
-  return { level, seconds: total };
+  return total;
 }
 
-// The share of the measured window, up to HISTORY_DAYS, a component was not down.
+// A day's bar: its worst checked level, or no data when most of it was not
+// checked; and how long it was not operational.
+function dayLevel(stretches, start, end) {
+  if (end <= start) return { level: "none", seconds: 0 };
+  const bad = stretches.filter((s) => s.from < end && (s.to ?? end) > start && s.level !== "unknown");
+  const level = worst(bad.map((s) => s.level));
+  const down = covered(stretches, ["degraded", "down", "maintenance"], start, end);
+  const unchecked = covered(stretches, ["unknown"], start, end);
+  if (level === "operational" && unchecked > (end - start) * UNCHECKED_SHARE) {
+    return { level: "none", seconds: 0 };
+  }
+  return { level, seconds: down };
+}
+
+// The share of checked time, up to HISTORY_DAYS, a component was not down.
+// Time not checked counts neither way.
 function uptime(stretches, since, until) {
   const start = Math.max(since, until - HISTORY_DAYS * DAY);
-  if (until - start < 3600) return null;
-  const down = stretches
-    .filter((s) => s.level === "down")
-    .reduce((sum, s) => sum + Math.max(0, Math.min(s.to ?? until, until) - Math.max(s.from, start)), 0);
-  return (100 * (1 - down / (until - start))).toFixed(2);
+  const checked = until - start - covered(stretches, ["unknown"], start, until);
+  if (checked < HOUR) return null;
+  return 100 * (1 - covered(stretches, ["down"], start, until) / checked);
 }
 
-// Each day of the last `days` to today, by its worst level; a day before the
-// record began, or after its last update `until`, has no data.
+function percent(share) {
+  return share >= 100 ? "100%" : `${Math.min(share, 99.99).toFixed(2)}%`;
+}
+
 function bars(stretches, since, until, now, days) {
   const node = el("div", "bars");
   node.style.setProperty("--days", days);
-  const today = Math.floor(now / DAY) * DAY;
-  for (let d = days - 1; d >= 0; d--) {
-    const start = today - d * DAY;
-    const end = start + DAY;
+  const starts = dayStarts(now, days);
+  starts.forEach((start, i) => {
+    const end = i + 1 < starts.length ? starts[i + 1] : start + DAY;
     const cell = el("span");
-    if (end <= since || start >= until) {
-      cell.className = "none";
-      cell.title = `${day(start)}: no data`;
-    } else {
-      const { level, seconds: total } = span(stretches, start, Math.min(end, until));
-      cell.className = level;
-      cell.title = level === "operational"
+    const from = Math.max(start, since);
+    const to = Math.min(end, until);
+    const { level, seconds: total } = to > from ? dayLevel(stretches, from, to) : { level: "none", seconds: 0 };
+    cell.className = level;
+    cell.title = level === "none"
+      ? `${day(start)}: no data`
+      : level === "operational"
         ? `${day(start)}: operational`
         : `${day(start)}: ${LABEL[level].toLowerCase()}, not operational for ${duration(total)}`;
-    }
     node.append(cell);
-  }
+  });
   return node;
 }
 
 // A measured stretch a written incident of its component spans says less
 // than the incident: the incident is shown alone.
-function covered(stretch, incidents) {
+function coveredByWritten(stretch, incidents) {
   return incidents.some((i) => {
     if (!i.components.includes(stretch.component)) return false;
     const first = i.updates[0].at;
@@ -270,13 +324,22 @@ function level(component, live, stale) {
   return worst([component.level, ...declared]);
 }
 
+// When a level last changed, or null when none has since the record began.
+function lastChange(status) {
+  const edges = status.incidents.flatMap((s) => [s.from, s.to ?? 0]);
+  return edges.length ? Math.max(...edges) : null;
+}
+
 // --- Rendering --------------------------------------------------------------
 
-function verdict(levels) {
-  if (levels.includes("down")) return ["down", "A component is down"];
-  if (levels.includes("degraded")) return ["degraded", "A component is degraded"];
-  if (levels.includes("maintenance")) return ["maintenance", "Maintenance in progress"];
-  if (levels.includes("unknown")) return ["unknown", "A component is not measured now"];
+// The banner: the worst level now, naming the components at it.
+function verdict(components) {
+  for (const at of ["down", "degraded", "maintenance", "unknown"]) {
+    const named = components.filter((c) => c.level === at).map((c) => unbroken(c.name));
+    if (named.length === 1) return [at, `${named[0]} is ${SAID[at]}`];
+    if (named.length === 2) return [at, `${named[0]} and ${named[1]} are ${SAID[at]}`];
+    if (named.length > 2) return [at, `${named.length} components are ${SAID[at]}`];
+  }
   return ["operational", "Every component is operational"];
 }
 
@@ -287,7 +350,7 @@ function updatesList(incident) {
     item.append(
       el("strong", "", UPDATE[u.status] || u.status),
       el("span", "", ` ${u.body}`),
-      el("div", "when muted", utc(u.at)),
+      el("div", "when muted", when(u.at)),
     );
     list.append(item);
   }
@@ -301,7 +364,7 @@ function affected(incident, names) {
 
 function scheduled(incident) {
   if (incident.kind !== "maintenance" || incident.from === null) return "";
-  return `Scheduled ${utc(incident.from)}${incident.to ? ` to ${utc(incident.to)}` : ""}`;
+  return `Scheduled ${when(incident.from)}${incident.to ? ` to ${when(incident.to)}` : ""}`;
 }
 
 function renderOpen(incidents, names, now) {
@@ -323,13 +386,13 @@ function renderOpen(incidents, names, now) {
 
 function renderPast(incidents, stretches, names, now) {
   const box = document.getElementById("past-list");
-  const start = Math.floor(now / DAY) * DAY - (PAST_DAYS - 1) * DAY;
+  const start = dayStarts(now, PAST_DAYS)[0];
   const items = [
     ...incidents
       .filter((i) => !open(i, now) && i.updates[0].at >= start)
       .map((i) => ({ at: i.updates[0].at, node: pastWritten(i, names) })),
     ...stretches
-      .filter((s) => (s.level === "down" || s.level === "degraded") && (s.to ?? now) >= start && !covered(s, incidents))
+      .filter((s) => (s.level === "down" || s.level === "degraded") && (s.to ?? now) >= start && !coveredByWritten(s, incidents))
       .map((s) => ({ at: s.from, node: pastMeasured(s, names) })),
   ].sort((a, b) => b.at - a.at);
   if (!items.length) {
@@ -353,13 +416,13 @@ function renderPast(incidents, stretches, names, now) {
 
 // One row of the past: a title, its duration and components on one line,
 // and its level; a written incident's updates fold under it.
-function pastRow(id, level, title, meta, updates) {
-  const node = el("article", `past ${level}`);
+function pastRow(id, rowLevel, title, meta, updates) {
+  const node = el("article", `past ${rowLevel}`);
   if (id) node.id = id;
   const head = el("div", "row");
   const text = el("div");
   text.append(el("h4", "", title), el("p", "muted", meta));
-  head.append(text, el("span", "chip", LABEL[level]));
+  head.append(text, el("span", "chip", LABEL[rowLevel]));
   node.append(head);
   if (updates) {
     const fold = el("details");
@@ -380,8 +443,8 @@ function pastWritten(incident, names) {
 function pastMeasured(stretch, names) {
   const name = unbroken(names[stretch.component] || stretch.component);
   const meta = stretch.to === null
-    ? `Since ${clock(stretch.from)} · measured from outside the cloud`
-    : `${duration(stretch.to - stretch.from)}, ${clock(stretch.from)} to ${clock(stretch.to)} · measured from outside the cloud`;
+    ? `Since ${clock(stretch.from)}`
+    : `${duration(stretch.to - stretch.from)}, ${clock(stretch.from)} to ${clock(stretch.to)}`;
   return pastRow("", stretch.level, `${name} ${LABEL[stretch.level].toLowerCase()}`, meta, null);
 }
 
@@ -390,14 +453,14 @@ function pastMeasured(stretch, names) {
 function groups(components) {
   const sessions = components.filter((c) => c.id.startsWith(SESSIONS));
   const others = components.filter((c) => !c.id.startsWith(SESSIONS));
-  const rows = others.map((c) => ({ id: c.id, name: c.name, level: c.level, about: about(c.id), ids: [c.id], parts: [] }));
+  const rows = others.map((c) => ({ key: c.id, name: c.name, level: c.level, about: ABOUT[c.id] || "", ids: [c.id], parts: [] }));
   if (sessions.length) {
+    const checked = sessions.filter((c) => c.level !== "unknown");
     rows.push({
-      id: "sessions",
+      key: "sessions",
       name: "Sessions",
-      level: sessions.map((c) => c.level).includes("unknown") && !sessions.some((c) => c.level !== "unknown")
-        ? "unknown" : worst(sessions.map((c) => (c.level === "unknown" ? "operational" : c.level))),
-      about: "On each class: a session created, a machine run in it and checkpointed, every 15 minutes.",
+      level: checked.length ? worst(checked.map((c) => c.level)) : "unknown",
+      about: ABOUT.sessions,
       ids: sessions.map((c) => c.id),
       parts: sessions.map((c) => ({ name: c.name.replace(/^Sessions on /, ""), level: c.level })),
     });
@@ -405,20 +468,29 @@ function groups(components) {
   return rows;
 }
 
+function aboutLine(row) {
+  const line = el("p", "about-line muted", row.about);
+  const command = ABOUT_COMMAND[row.key];
+  if (command) line.append(" ", el("code", "", command[0]), command[1]);
+  return line;
+}
+
 function componentRow(row, status, until, now, days) {
   const mine = status.incidents.filter((s) => row.ids.includes(s.component));
   const item = el("li", row.level);
   const head = el("div", "row");
   head.append(el("span", "name", row.name), el("span", "level", LABEL[row.level]));
-  // A group's share not down counts a stretch any of its parts was down.
   const up = uptime(mine, status.since, until);
+  const young = until - status.since < HISTORY_DAYS * DAY;
   const foot = el("div", "uptime muted");
   foot.append(
     el("span", "", `${days} days ago`),
-    el("span", "", up === null ? `Measured since ${utc(status.since)}` : `${up}% not down`),
+    el("span", "", up === null
+      ? `Checked since ${when(status.since)}`
+      : `${percent(up)} uptime${young ? ` since ${day(status.since)}` : ""}`),
     el("span", "", "Today"),
   );
-  item.append(head, el("p", "about-line muted", row.about), bars(mine, status.since, until, now, days), foot);
+  item.append(head, aboutLine(row), bars(mine, status.since, until, now, days), foot);
   if (row.parts.length) {
     const parts = el("ul", "parts");
     for (const p of row.parts) {
@@ -431,28 +503,22 @@ function componentRow(row, status, until, now, days) {
   return item;
 }
 
-// When a level last changed: the newest edge of a stretch, or the start of
-// the record when nothing has changed since.
-function lastChange(status) {
-  return status.incidents.reduce((t, s) => Math.max(t, s.from, s.to ?? 0), status.since);
-}
-
 function renderStatus(status, incidents, now) {
   const stale = now - status.updated > status.stale_after;
   const days = NARROW.matches ? NARROW_DAYS : HISTORY_DAYS;
   const names = Object.fromEntries(status.components.map((c) => [c.id, c.name]));
   const live = incidents.filter((i) => open(i, now) && underway(i, now));
   const components = status.components.map((c) => ({ ...c, level: level(c, live, stale) }));
-  const [overall, text] = stale ? ["unknown", "Status unknown"] : verdict(components.map((c) => c.level));
-  document.getElementById("overall").className = `overall ${overall}`;
-  document.getElementById("verdict").textContent = text;
-  // The outpost writes every change at once, so a fresh file holds until
-  // now; a stale one only until it was written.
+  const [overall, text] = stale ? ["unknown", "Status unknown"] : verdict(components);
+  // The outpost writes every change at once and confirms at least hourly,
+  // so a fresh file holds until now; a stale one only until it was written.
   const until = stale ? status.updated : now;
   const changed = lastChange(status);
+  document.getElementById("overall").className = `overall ${overall}`;
+  document.getElementById("verdict").textContent = text;
   document.getElementById("updated").textContent = stale
-    ? `No update since ${utc(status.updated)}`
-    : `Measured continuously. Last change ${ago(now - changed)}, at ${utc(changed)}`;
+    ? `No update since ${when(status.updated)}. The checks may have stopped.`
+    : `${changed === null ? `No change since ${when(status.since)}` : `Last change ${ago(now - changed)}`}. Confirmed ${ago(now - status.updated)}.`;
   document.getElementById("range").textContent = `The last ${days} days`;
   document.getElementById("components").replaceChildren(
     ...groups(components).map((row) => componentRow(row, status, until, now, days)),
@@ -464,18 +530,11 @@ function renderStatus(status, incidents, now) {
 function renderUnavailable(incidents, now) {
   document.getElementById("overall").className = "overall unknown";
   document.getElementById("verdict").textContent = "Status unknown";
-  document.getElementById("updated").textContent = "The status could not be read. It is read again every minute.";
+  document.getElementById("updated").textContent = "The status could not be loaded. The page tries again every minute.";
   renderOpen(incidents, {}, now);
 }
 
-// A zone's offset from UTC now, in minutes, and as GMT+5:30 writes it.
-function offset(name) {
-  const part = new Intl.DateTimeFormat("en-US", { timeZone: name, timeZoneName: "longOffset" })
-    .formatToParts(new Date()).find((p) => p.type === "timeZoneName").value;
-  const found = part.match(/GMT([+-])(\d{2}):(\d{2})/);
-  const minutes = found ? (found[1] === "-" ? -1 : 1) * (Number(found[2]) * 60 + Number(found[3])) : 0;
-  return { minutes, label: found ? part : "GMT" };
-}
+// --- The controls -----------------------------------------------------------
 
 function city(name) {
   return name.split("/").pop().replaceAll("_", " ");
@@ -483,6 +542,7 @@ function city(name) {
 
 function renderZones() {
   const select = document.getElementById("zone");
+  const now = Date.now() / 1000;
   const option = (value, text) => {
     const node = el("option", "", text);
     node.value = value;
@@ -491,7 +551,7 @@ function renderZones() {
   const all = el("optgroup");
   all.label = "All time zones";
   all.append(
-    ...ZONES.map((name) => ({ name, ...offset(name) }))
+    ...ZONES.map((name) => ({ name, ...offset(name, now) }))
       .sort((a, b) => a.minutes - b.minutes || a.name.localeCompare(b.name))
       .map((z) => option(z.name, `${city(z.name)}, ${z.label}`)),
   );
@@ -508,8 +568,6 @@ function switchZone(event) {
 
 // The theme: the system's until the viewer picks one. index.html sets a
 // stored choice before the first paint.
-const THEME_KEY = "theme";
-
 function currentTheme() {
   const set = document.documentElement.dataset.theme;
   if (set) return set;

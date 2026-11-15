@@ -10,7 +10,7 @@ licensed for reuse.
 
 | File | Written by |
 |---|---|
-| `status.json` | The outpost, outside the cloud: at once on every change, and every 6 hours besides |
+| `status.json` | The outpost, outside the cloud: on every change, and every 60 minutes besides |
 | `index.md` | The outpost: the status in Markdown, for agents |
 | `feed.atom` | The outpost: the incidents as an Atom feed |
 | `incidents.json` | An operator, by hand |
@@ -61,4 +61,5 @@ one moves to the past incidents. The outpost puts it in `feed.atom` and
   `completed`. The last one decides whether it is open.
 - A maintenance shows from 7 days before `from`, and changes its
   components' level only once it starts.
-- Times are UTC in ISO 8601, `YYYY-MM-DDTHH:MMZ`.
+- Times are UTC in ISO 8601, `YYYY-MM-DDTHH:MMZ`. A time without a zone is
+  read as UTC.

@@ -16,7 +16,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TestFlows Machine Status</title>
-  <meta name="description" content="Whether TestFlows Machine works now: the website, the API, sign-in and sessions on each class, measured from outside the cloud.">
+  <meta name="description" content="The current status of TestFlows Machine: the website, the API, sign-in and sessions on each class, checked from a separate server.">
   <meta property="og:title" content="TestFlows Machine Status">
   <meta property="og:description" content="Whether TestFlows Machine works now, and its incidents.">
   <meta property="og:url" content="https://status.testflows.com/">
@@ -45,7 +45,7 @@
       <span>Machine Status</span>
     </a>
     <div class="controls">
-      <label class="zone-label muted" for="zone">Time</label>
+      <label class="zone-label muted" for="zone">Time zone</label>
       <select id="zone" class="zone"><option value="UTC">UTC</option></select>
       <button id="theme" class="theme" type="button" aria-label="Switch the theme">
         <svg class="sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -64,7 +64,7 @@
         <svg class="icon icon-unknown" viewBox="0 0 24 24"><path d="M9.5 9.3a2.6 2.6 0 1 1 3.7 2.4c-.8.4-1.2 1-1.2 1.9M12 17.2v.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
       </span>
       <div>
-        <h1 id="verdict">Reading the status</h1>
+        <h1 id="verdict">Loading status</h1>
         <p id="updated" class="muted"></p>
       </div>
     </section>
@@ -92,8 +92,9 @@
     </section>
 
     <section class="about muted">
-      <p>Every component is measured from a server outside the cloud.</p>
-      <p>Follow the incidents in a feed reader or in Slack with <a href="feed.atom">the Atom feed</a>.</p>
+      <p>Every component is checked from a separate server, outside the cloud it checks.</p>
+      <p>If a command fails while every component is operational, <a href="https://testflows.com/contact.html">contact support</a>.</p>
+      <p>Subscribe with the <a href="feed.atom">incident feed (Atom)</a> in a feed reader, or in Slack with <code>/feed subscribe https://status.testflows.com/feed.atom</code>.</p>
     </section>
   </main>
 
@@ -108,7 +109,7 @@
       </nav>
       <nav>
         <h2>Status</h2>
-        <a href="feed.atom">Incidents feed</a>
+        <a href="feed.atom">Incident feed (Atom)</a>
         <a href="https://testflows.com/contact.html">Support</a>
       </nav>
       <nav>

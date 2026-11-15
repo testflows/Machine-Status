@@ -1,14 +1,14 @@
 # TestFlows Machine Status
 
-> Whether TestFlows Machine works now: the website, the API, sign-in, and sessions on each class. Every component is measured from a server outside the cloud, every 30 seconds for the website and the API and every 15 minutes for sessions. Incidents and maintenance are written by an operator.
+> The current status of TestFlows Machine: the website, the API, sign-in, and sessions on each class. Every component is checked from a separate server, every 30 seconds for the website and the API, every minute for sign-in, and every 15 minutes for sessions. Incidents and maintenance are written by an operator.
 
 ## Status
 
-- [Status in Markdown](https://status.testflows.com/index.md): The levels now, open incidents with their updates, and the last 14 days. Rewritten at once on every change, and every 6 hours besides; older than 7 hours, the status is unknown.
+- [Status in Markdown](https://status.testflows.com/index.md): The status now, open incidents with their updates, and the last 14 days. Rewritten on every change, and every 60 minutes besides. If the file is older than 75 minutes, treat the status as unknown.
 
 ## Machine-readable
 
-- [status.json](https://status.testflows.com/status.json): Each component's level, and each stretch it was not operational for 90 days, in Unix seconds. `updated` is when it was written; `stale_after` is how old it may be before it is not trusted.
+- [status.json](https://status.testflows.com/status.json): Each component's status, and each stretch it was not operational for 90 days, in Unix seconds. `updated` is when it was written; if it is older than `stale_after` seconds, treat the status as unknown.
 - [incidents.json](https://status.testflows.com/incidents.json): The incidents and maintenance an operator writes, each with its components and timestamped updates.
 - [feed.atom](https://status.testflows.com/feed.atom): The incidents as an Atom feed.
 
