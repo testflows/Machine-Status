@@ -1,0 +1,75 @@
+<!doctype html>
+<!--
+  Copyright (C) 2026 Katteli Inc. All rights reserved.
+  TestFlows.com Open-Source Software Testing Framework (https://testflows.com)
+
+  PROPRIETARY AND CONFIDENTIAL. This file contains trade secrets and
+  confidential information of Katteli Inc. Unauthorized copying, disclosure,
+  distribution, or use of this file, via any medium, is strictly prohibited
+  without express written authorization from Katteli Inc.
+
+  Authors:
+    Vitaliy Zakaznikov <vzakaznikov@testflows.com>
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TestFlows Machine Status</title>
+  <meta name="description" content="The status of TestFlows Machine: the API, sign-in and sessions on each class.">
+  <link rel="icon" href="https://testflows.com/img/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="status.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="https://testflows.com/machine/">
+      <picture>
+        <source srcset="https://testflows.com/img/logo-simple-modern-light.png" media="(prefers-color-scheme: light)">
+        <img src="https://testflows.com/img/logo-simple-modern.png" alt="TestFlows" height="28">
+      </picture>
+      <span>Machine Status</span>
+    </a>
+  </header>
+
+  <main>
+    <section id="overall" class="overall unknown" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <div>
+        <h1 id="verdict">Reading the status</h1>
+        <p id="updated" class="muted"></p>
+      </div>
+    </section>
+
+    <section id="notices" class="notices" hidden></section>
+
+    <section class="components">
+      <div class="components-head">
+        <h2>Components</h2>
+        <span class="muted" id="range"></span>
+      </div>
+      <ul id="components"></ul>
+      <div class="legend muted">
+        <span><i class="operational"></i>Operational</span>
+        <span><i class="degraded"></i>Degraded</span>
+        <span><i class="down"></i>Down</span>
+        <span><i class="none"></i>No data</span>
+      </div>
+    </section>
+
+    <section class="about muted">
+      <p>The API is checked every 30 seconds from outside the cloud. Sign-in is checked every minute. A session is created on each class, a machine is run in it and checkpointed, every 15 minutes.</p>
+      <p>Times are UTC.</p>
+    </section>
+  </main>
+
+  <footer class="muted">
+    <a href="https://testflows.com/machine/">TestFlows Machine</a>
+    <span>&copy; 2026 Katteli Inc.</span>
+  </footer>
+
+  <script src="status.js"></script>
+</body>
+</html>

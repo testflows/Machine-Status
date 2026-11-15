@@ -1,0 +1,203 @@
+/*
+ * Copyright (C) 2026 Katteli Inc. All rights reserved.
+ * TestFlows.com Open-Source Software Testing Framework (https://testflows.com)
+ *
+ * PROPRIETARY AND CONFIDENTIAL. This file contains trade secrets and
+ * confidential information of Katteli Inc. Unauthorized copying, disclosure,
+ * distribution, or use of this file, via any medium, is strictly prohibited
+ * without express written authorization from Katteli Inc.
+ *
+ * Authors:
+ *   Vitaliy Zakaznikov <vzakaznikov@testflows.com>
+ */
+
+/* testflows.com's tokens: dark by default, its light theme on request. */
+:root {
+  --bg: #101412;
+  --card: #171c19;
+  --border: rgba(230, 235, 231, 0.1);
+  --text: #e6ebe7;
+  --muted: rgba(230, 235, 231, 0.6);
+  --operational: #3dba8c;
+  --degraded: #e0a83e;
+  --down: #e07070;
+  --unknown: rgba(230, 235, 231, 0.35);
+  --none: rgba(230, 235, 231, 0.08);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f3f5f2;
+    --card: #ffffff;
+    --border: rgba(26, 33, 29, 0.1);
+    --text: #1a211d;
+    --muted: rgba(26, 33, 29, 0.6);
+    --operational: #1a7a58;
+    --degraded: #b45309;
+    --down: #c0392b;
+    --unknown: rgba(26, 33, 29, 0.35);
+    --none: rgba(26, 33, 29, 0.08);
+    color-scheme: light;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Titillium Web", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+a { color: inherit; }
+
+.muted { color: var(--muted); }
+
+.top, main, footer {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.top { padding-top: 28px; padding-bottom: 28px; }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.overall {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--level);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.overall h1 { margin: 0; font-size: 24px; font-weight: 700; }
+.overall p { margin: 0; }
+
+.dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--level);
+}
+
+.operational { --level: var(--operational); }
+.degraded { --level: var(--degraded); }
+.down { --level: var(--down); }
+.unknown { --level: var(--unknown); }
+
+.notices { margin-top: 20px; display: grid; gap: 12px; }
+
+.notice {
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--level);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.notice h3 { margin: 0 0 4px; font-size: 17px; }
+.notice p { margin: 0; white-space: pre-line; }
+.notice .when { margin-top: 6px; font-size: 14px; }
+
+.components { margin-top: 32px; }
+
+.components-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.components h2 { margin: 0 0 12px; font-size: 20px; }
+
+#components {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+}
+
+#components li { padding: 18px 20px; }
+#components li + li { border-top: 1px solid var(--border); }
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.name { font-weight: 600; }
+.level { color: var(--level); font-weight: 600; white-space: nowrap; }
+
+.bars {
+  display: grid;
+  grid-template-columns: repeat(var(--days), 1fr);
+  gap: 2px;
+  height: 30px;
+  margin-top: 12px;
+}
+
+.bars span {
+  border-radius: 2px;
+  background: var(--level, var(--none));
+}
+
+.bars span.none { --level: var(--none); }
+
+.uptime { margin-top: 6px; font-size: 14px; display: flex; justify-content: space-between; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  background: var(--level);
+}
+
+.legend i.none { background: var(--none); }
+
+.about { margin-top: 28px; font-size: 14px; }
+.about p { margin: 0 0 6px; }
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 28px;
+  padding-bottom: 40px;
+  font-size: 14px;
+}
+
+@media (max-width: 560px) {
+  .overall { padding: 18px; }
+  .overall h1 { font-size: 20px; }
+  .bars { gap: 1px; height: 26px; }
+}
