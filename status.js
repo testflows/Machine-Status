@@ -59,10 +59,10 @@ const ABOUT = {
   website: "testflows.com, with the docs and the installer. Checked every 30 seconds.",
   api: "The API behind every machine command and the SDK. Checked every 30 seconds.",
   "sign-in": "Sign-in codes sent by email and accepted. Checked every minute.",
-  sessions: "Creates a session on each class, starts a run in it and checkpoints the run. Checked every 15 minutes. Run",
+  sessions: "Creates a session on each class, starts a run in it and checkpoints the run, every 15 minutes. An outage shows within 30 minutes.",
 };
-// A command a description names, set as code after it.
-const ABOUT_COMMAND = { sessions: ["machine sessions show", " to see your session's class."] };
+// A command a description names, on its own line after it.
+const ABOUT_COMMAND = { sessions: ["Your session's class: ", "machine sessions show"] };
 
 // A query each time: GitHub Pages serves its files for 10 minutes from
 // caches the browser's no-store does not reach.
@@ -377,21 +377,11 @@ function ongoing(stretches, incidents) {
   return stretches.filter((s) => s.to === null && (s.level === "down" || s.level === "degraded") && !coveredByWritten(s, incidents));
 }
 
-function renderOpen(incidents, stretches, names, now) {
+function renderOpen(incidents, names, now) {
   const box = document.getElementById("open");
   const shown = incidents.filter((i) => open(i, now));
-  const found = ongoing(stretches, incidents);
-  box.hidden = shown.length + found.length === 0;
+  box.hidden = shown.length === 0;
   box.replaceChildren(
-    ...found.map((s) => {
-      const card = el("article", `incident ${s.level}`);
-      const name = unbroken(names[s.component] || s.component);
-      card.append(
-        el("h3", "", `${name} ${LABEL[s.level].toLowerCase()} since ${clock(s.from)} ${zoneName()}`),
-        el("p", "muted", "Detected automatically. No update from the team yet."),
-      );
-      return card;
-    }),
     ...shown.map((i) => {
       const card = el("article", `incident ${i.level}`);
       card.id = i.id;
@@ -462,7 +452,10 @@ function pastWritten(incident, names) {
 
 function pastMeasured(stretch, names) {
   const name = unbroken(names[stretch.component] || stretch.component);
-  const meta = `${duration(stretch.to - stretch.from)}, ${clock(stretch.from)} to ${clock(stretch.to)} · detected automatically`;
+  const across = day(stretch.from) !== day(stretch.to);
+  const from = across ? `${day(stretch.from).replace(/, \d{4}$/, "")} ${clock(stretch.from)}` : clock(stretch.from);
+  const to = across ? `${day(stretch.to).replace(/, \d{4}$/, "")} ${clock(stretch.to)}` : clock(stretch.to);
+  const meta = `${from} to ${to} ${zoneName()}, ${duration(stretch.to - stretch.from)}. Detected automatically.`;
   return pastRow("", stretch.level, `${name} ${LABEL[stretch.level].toLowerCase()}`, meta, null);
 }
 
@@ -489,7 +482,7 @@ function groups(components) {
 function aboutLine(row) {
   const line = el("p", "about-line muted", row.about);
   const command = ABOUT_COMMAND[row.key];
-  if (command) line.append(" ", el("code", "", command[0]), command[1]);
+  if (command) line.append(el("br"), command[0], el("code", "", command[1]));
   return line;
 }
 
@@ -523,7 +516,10 @@ function componentRow(row, status, until, now, days) {
 
 function renderStatus(status, incidents, now) {
   const stale = now - status.updated > status.stale_after;
-  const days = NARROW.matches ? NARROW_DAYS : HISTORY_DAYS;
+  // Bars from the first checked day, at least NARROW_DAYS wide: 89 days of
+  // no data read as broken.
+  const recorded = Math.ceil((now - dayStart(status.since)) / DAY);
+  const days = NARROW.matches ? NARROW_DAYS : Math.min(HISTORY_DAYS, Math.max(NARROW_DAYS, recorded));
   const names = Object.fromEntries(status.components.map((c) => [c.id, c.name]));
   const live = incidents.filter((i) => open(i, now) && underway(i, now));
   const components = status.components.map((c) => ({ ...c, level: level(c, live, stale) }));
@@ -534,14 +530,19 @@ function renderStatus(status, incidents, now) {
   const changed = lastChange(status);
   document.getElementById("overall").className = `overall ${overall}`;
   document.getElementById("verdict").textContent = text;
+  // An outage the checks found and no one has written up yet: the banner
+  // says since when, once, rather than a card repeating it.
+  const found = ongoing(status.incidents, incidents).sort((a, b) => a.from - b.from)[0];
   document.getElementById("updated").textContent = stale
-    ? `No update since ${when(status.updated)}. The checks may have stopped.`
-    : `${changed === null ? `No problems since checks began on ${day(status.since)}` : `Last change ${ago(now - changed)}`}. Updated ${ago(now - status.updated)}.`;
+    ? `No update since ${when(status.updated)}. Status unknown.`
+    : found && overall !== "operational"
+      ? `${LABEL[found.level]} since ${when(found.from)}. Detected automatically. No update from the team yet.`
+      : `${changed === null ? `No problems since checks began ${day(status.since)}` : `Last change ${ago(now - changed)}`}. Updated ${ago(now - status.updated)}.`;
   document.getElementById("range").textContent = `The last ${days} days`;
   document.getElementById("components").replaceChildren(
     ...groups(components).map((row) => componentRow(row, status, until, now, days)),
   );
-  renderOpen(incidents, status.incidents, names, now);
+  renderOpen(incidents, names, now);
   renderPast(incidents, status.incidents, names, now);
 }
 
@@ -549,7 +550,7 @@ function renderUnavailable(incidents, now) {
   document.getElementById("overall").className = "overall unknown";
   document.getElementById("verdict").textContent = "Status unknown";
   document.getElementById("updated").textContent = "The status could not be loaded. The page tries again every minute.";
-  renderOpen(incidents, [], {}, now);
+  renderOpen(incidents, {}, now);
 }
 
 // --- The controls -----------------------------------------------------------

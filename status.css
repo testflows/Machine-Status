@@ -128,7 +128,24 @@ a { color: inherit; }
   cursor: pointer;
 }
 
-.zone { max-width: 220px; padding: 4px 10px; }
+/* The time zone reads as a quiet setting, not the page's main control. */
+.zone {
+  max-width: 200px;
+  padding: 4px 6px;
+  border-color: transparent;
+  background: none;
+  color: var(--muted);
+}
+
+.subscribe {
+  font-size: 14px;
+  text-decoration: none;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.subscribe:hover { border-color: var(--muted); }
 .theme { display: inline-flex; padding: 6px; }
 .theme:hover, .zone:hover { border-color: var(--muted); }
 /* The icon shows the theme a click gives. */
@@ -138,6 +155,11 @@ a { color: inherit; }
   .top { flex-wrap: wrap; justify-content: flex-start; }
   .controls { width: 100%; }
   .zone { max-width: 160px; }
+  /* The menu names its zone itself; its label wraps at this width. */
+  .zone-label { display: none; }
+  /* The share alone: its day labels wrap at this width. */
+  .uptime span:first-child, .uptime span:last-child { display: none; }
+  .uptime { justify-content: center; }
 }
 
 .brand {

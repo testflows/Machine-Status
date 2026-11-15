@@ -10,7 +10,7 @@ licensed for reuse.
 
 | File | Written by |
 |---|---|
-| `status.json` | The outpost, outside the cloud: on every change, and every 60 minutes besides |
+| `status.json` | The outpost, outside the cloud: on every change and at least every 60 minutes |
 | `index.md` | The outpost: the status in Markdown, for agents |
 | `feed.atom` | The outpost: the incidents as an Atom feed |
 | `incidents.json` | An operator, by hand |
@@ -55,7 +55,8 @@ one moves to the past incidents. The outpost puts it in `feed.atom` and
 
 - `id` is the incident's anchor on the page, `#2026-11-20-sign-in`.
 - `level` is `degraded` or `down`; a maintenance has none.
-- `components` are `website`, `api`, `sign-in`, and `sessions/<class>`.
+- `components` are `website`, `api`, `sign-in`, and `sessions/<class>`, such
+  as `sessions/standard-ip`.
 - An update's `status` is `investigating`, `identified`, `monitoring` or
   `resolved`; for a maintenance, `scheduled`, `in progress` or
   `completed`. The last one decides whether it is open.
