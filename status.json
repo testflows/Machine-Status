@@ -1,7 +1,7 @@
 {
- "updated": 1794781589,
+ "updated": 1794783786,
  "since": 1794754776,
- "stale_after": 2100,
+ "stale_after": 4500,
  "components": [
   {
    "id": "website",

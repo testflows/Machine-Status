@@ -4,5 +4,8 @@
   <id>https://status.testflows.com/</id>
   <link href="https://status.testflows.com/" />
   <link rel="self" href="https://status.testflows.com/feed.atom" />
+  <author>
+    <name>TestFlows</name>
+  </author>
   <updated>2026-11-15T14:59:36Z</updated>
 </feed>

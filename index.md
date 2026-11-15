@@ -1,14 +1,14 @@
 # TestFlows Machine Status
 
-> Whether TestFlows Machine works now, measured from a server outside the cloud. This file is rewritten on every change and every 10 minutes. When it is older than 35 minutes, the status is unknown.
+> The current status of TestFlows Machine, checked from a separate server. This file is rewritten on every change, and every 60 minutes besides. If it is older than 75 minutes, treat the status as unknown.
 
-Updated 2026-11-15 22:26 UTC.
+Updated 2026-11-15 23:03 UTC.
 
 ## Now
 
 Every component is operational.
 
-| Component | Level |
+| Component | Status |
 |---|---|
 | Website | operational |
 | API | operational |
