@@ -2,24 +2,24 @@
 
 > The current status of TestFlows Machine. The website, the API and sessions are checked from a server outside the TestFlows cloud, sign-in from inside it. This file is rewritten on every change and at least every 60 minutes. If it is older than 75 minutes, treat the status as unknown.
 
-Updated 2026-11-20 02:47 UTC.
+Updated 2026-11-20 03:00 UTC.
 
 ## Now
 
-Every component is operational.
+Sessions on dedicated-ip in EU are down.
 
 | Component | Status |
 |---|---|
 | Website | Operational |
 | API | Operational |
 | Sign-in | Operational |
-| Sessions on dedicated-ip in EU | Operational |
+| Sessions on dedicated-ip in EU | Down |
 | Sessions on standard-ie in EU | Operational |
 | Sessions on standard-ip in EU | Operational |
 
 ## Open incidents
 
-None.
+- Sessions on dedicated-ip in EU down since 2026-11-20 03:00 UTC. Detected automatically.
 
 ## Past 14 days
 

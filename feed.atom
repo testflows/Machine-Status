@@ -7,5 +7,12 @@
   <author>
     <name>TestFlows</name>
   </author>
-  <updated>2026-11-15T14:59:36Z</updated>
+  <updated>2026-11-20T03:00:38Z</updated>
+  <entry>
+    <id>https://status.testflows.com/#sessions/dedicated-ip-1795143638</id>
+    <title>Sessions on dedicated-ip in EU down</title>
+    <updated>2026-11-20T03:00:38Z</updated>
+    <link href="https://status.testflows.com/#sessions/dedicated-ip-1795143638" />
+    <content type="text">Sessions on dedicated-ip in EU down since 2026-11-20 03:00 UTC. Detected automatically.</content>
+  </entry>
 </feed>
