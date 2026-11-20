@@ -7,7 +7,28 @@
   <author>
     <name>TestFlows</name>
   </author>
-  <updated>2026-11-20T03:06:00Z</updated>
+  <updated>2026-11-20T03:15:13Z</updated>
+  <entry>
+    <id>https://status.testflows.com/#sessions/dedicated-ip-1795143638-1795144513</id>
+    <title>Sessions on dedicated-ip in EU operational again</title>
+    <updated>2026-11-20T03:15:13Z</updated>
+    <link href="https://status.testflows.com/#sessions/dedicated-ip-1795143638-1795144513" />
+    <content type="text">Sessions on dedicated-ip in EU was down for 15 minutes, from 2026-11-20 03:00 UTC to 2026-11-20 03:15 UTC.</content>
+  </entry>
+  <entry>
+    <id>https://status.testflows.com/#sessions/standard-ie-1795143960-1795144513</id>
+    <title>Sessions on standard-ie in EU operational again</title>
+    <updated>2026-11-20T03:15:13Z</updated>
+    <link href="https://status.testflows.com/#sessions/standard-ie-1795143960-1795144513" />
+    <content type="text">Sessions on standard-ie in EU was down for 9 minutes, from 2026-11-20 03:06 UTC to 2026-11-20 03:15 UTC.</content>
+  </entry>
+  <entry>
+    <id>https://status.testflows.com/#sessions/standard-ip-1795143960-1795144513</id>
+    <title>Sessions on standard-ip in EU operational again</title>
+    <updated>2026-11-20T03:15:13Z</updated>
+    <link href="https://status.testflows.com/#sessions/standard-ip-1795143960-1795144513" />
+    <content type="text">Sessions on standard-ip in EU was down for 9 minutes, from 2026-11-20 03:06 UTC to 2026-11-20 03:15 UTC.</content>
+  </entry>
   <entry>
     <id>https://status.testflows.com/#sessions/standard-ie-1795143960</id>
     <title>Sessions on standard-ie in EU down</title>

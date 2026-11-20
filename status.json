@@ -1,5 +1,5 @@
 {
- "updated": 1795143960,
+ "updated": 1795144513,
  "since": 1794754776,
  "stale_after": 4500,
  "components": [
@@ -21,17 +21,17 @@
   {
    "id": "sessions/dedicated-ip",
    "name": "Sessions on dedicated-ip in EU",
-   "level": "down"
+   "level": "operational"
   },
   {
    "id": "sessions/standard-ie",
    "name": "Sessions on standard-ie in EU",
-   "level": "down"
+   "level": "operational"
   },
   {
    "id": "sessions/standard-ip",
    "name": "Sessions on standard-ip in EU",
-   "level": "down"
+   "level": "operational"
   }
  ],
  "incidents": [
@@ -39,19 +39,19 @@
    "component": "sessions/dedicated-ip",
    "level": "down",
    "from": 1795143638,
-   "to": null
+   "to": 1795144513
   },
   {
    "component": "sessions/standard-ie",
    "level": "down",
    "from": 1795143960,
-   "to": null
+   "to": 1795144513
   },
   {
    "component": "sessions/standard-ip",
    "level": "down",
    "from": 1795143960,
-   "to": null
+   "to": 1795144513
   }
  ]
 }
