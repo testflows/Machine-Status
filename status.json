@@ -1,5 +1,5 @@
 {
- "updated": 1795141331,
+ "updated": 1795142862,
  "since": 1794754776,
  "stale_after": 4500,
  "components": [
@@ -16,6 +16,11 @@
   {
    "id": "sign-in",
    "name": "Sign-in",
+   "level": "operational"
+  },
+  {
+   "id": "sessions/dedicated-ip",
+   "name": "Sessions on dedicated-ip in EU",
    "level": "operational"
   },
   {
