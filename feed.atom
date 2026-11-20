@@ -7,7 +7,21 @@
   <author>
     <name>TestFlows</name>
   </author>
-  <updated>2026-11-20T03:00:38Z</updated>
+  <updated>2026-11-20T03:06:00Z</updated>
+  <entry>
+    <id>https://status.testflows.com/#sessions/standard-ie-1795143960</id>
+    <title>Sessions on standard-ie in EU down</title>
+    <updated>2026-11-20T03:06:00Z</updated>
+    <link href="https://status.testflows.com/#sessions/standard-ie-1795143960" />
+    <content type="text">Sessions on standard-ie in EU down since 2026-11-20 03:06 UTC. Detected automatically.</content>
+  </entry>
+  <entry>
+    <id>https://status.testflows.com/#sessions/standard-ip-1795143960</id>
+    <title>Sessions on standard-ip in EU down</title>
+    <updated>2026-11-20T03:06:00Z</updated>
+    <link href="https://status.testflows.com/#sessions/standard-ip-1795143960" />
+    <content type="text">Sessions on standard-ip in EU down since 2026-11-20 03:06 UTC. Detected automatically.</content>
+  </entry>
   <entry>
     <id>https://status.testflows.com/#sessions/dedicated-ip-1795143638</id>
     <title>Sessions on dedicated-ip in EU down</title>
