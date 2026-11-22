@@ -2,16 +2,16 @@
 
 > The current status of TestFlows Machine. The website, the API and sessions are checked from a server outside the TestFlows cloud, sign-in from inside it. This file is rewritten on every change and at least every 60 minutes. If it is older than 75 minutes, treat the status as unknown.
 
-Updated 2026-11-22 05:55 UTC.
+Updated 2026-11-22 06:00 UTC.
 
 ## Now
 
-API is degraded.
+Every component is operational.
 
 | Component | Status |
 |---|---|
 | Website | Operational |
-| API | Degraded |
+| API | Operational |
 | Sign-in | Operational |
 | Sessions on dedicated-ip in EU | Operational |
 | Sessions on standard-ie in EU | Operational |
@@ -19,9 +19,11 @@ API is degraded.
 
 ## Open incidents
 
-- API degraded since 2026-11-22 05:55 UTC. Detected automatically.
+None.
 
 ## Past 14 days
+
+- API degraded for 1 minute from 2026-11-22 05:55 UTC. Detected automatically.
 
 - Sessions on standard-ie in EU down for 9 minutes from 2026-11-20 03:06 UTC. Detected automatically.
 

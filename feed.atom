@@ -7,7 +7,14 @@
   <author>
     <name>TestFlows</name>
   </author>
-  <updated>2026-11-22T05:55:12Z</updated>
+  <updated>2026-11-22T05:56:19Z</updated>
+  <entry>
+    <id>https://status.testflows.com/#api-1795326912-1795326979</id>
+    <title>API operational again</title>
+    <updated>2026-11-22T05:56:19Z</updated>
+    <link href="https://status.testflows.com/#api-1795326912-1795326979" />
+    <content type="text">API was degraded for 1 minute, from 2026-11-22 05:55 UTC to 2026-11-22 05:56 UTC.</content>
+  </entry>
   <entry>
     <id>https://status.testflows.com/#api-1795326912</id>
     <title>API degraded</title>
