@@ -1,5 +1,5 @@
 {
- "updated": 1795325419,
+ "updated": 1795326912,
  "since": 1794754776,
  "stale_after": 4500,
  "components": [
@@ -11,7 +11,7 @@
   {
    "id": "api",
    "name": "API",
-   "level": "operational"
+   "level": "degraded"
   },
   {
    "id": "sign-in",
@@ -52,6 +52,12 @@
    "level": "down",
    "from": 1795143960,
    "to": 1795144513
+  },
+  {
+   "component": "api",
+   "level": "degraded",
+   "from": 1795326912,
+   "to": null
   }
  ]
 }

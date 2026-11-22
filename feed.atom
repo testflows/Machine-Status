@@ -7,7 +7,14 @@
   <author>
     <name>TestFlows</name>
   </author>
-  <updated>2026-11-20T03:15:13Z</updated>
+  <updated>2026-11-22T05:55:12Z</updated>
+  <entry>
+    <id>https://status.testflows.com/#api-1795326912</id>
+    <title>API degraded</title>
+    <updated>2026-11-22T05:55:12Z</updated>
+    <link href="https://status.testflows.com/#api-1795326912" />
+    <content type="text">API degraded since 2026-11-22 05:55 UTC. Detected automatically.</content>
+  </entry>
   <entry>
     <id>https://status.testflows.com/#sessions/dedicated-ip-1795143638-1795144513</id>
     <title>Sessions on dedicated-ip in EU operational again</title>
